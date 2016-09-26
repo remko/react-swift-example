@@ -1,0 +1,8 @@
+#!/usr/bin/env babel-node
+/* eslint no-var: 0 */
+
+var server = require('./JS/server');
+
+if (process.argv.length < 3) { throw Error("Missing arguments"); }
+
+console.log(server.render(JSON.parse(process.argv[2])).html);

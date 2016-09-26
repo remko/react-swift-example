@@ -1,0 +1,5 @@
+Resources/server*
+Public/js
+Packages
+node_modules
+.build
