@@ -28,3 +28,11 @@ dev-server:
 .PHONY: deps
 deps:
 	npm install
+
+.PHONY: docker
+docker:
+	docker build -t react-swift-example .
+
+.PHONY: docker-run
+docker-run:
+	docker run -it --rm=true -p 8080:8080 react-swift-example $(DOCKER_COMMAND)
