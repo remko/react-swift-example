@@ -14,6 +14,14 @@ before_install:
 
 install:
   - make deps
+  - npm install -g webpack-dev-server
 
 script:
   - make && make OPTIMIZE=1
+  - make run &
+  - until $(curl --output /dev/null --silent --head http://localhost:8080); do sleep 1; done
+  - make run-dev-server &
+  - until $(curl --output /dev/null --silent --head http://localhost:8081); do sleep 1; done
+  - make run-webdriver &
+  - until $(curl --output /dev/null --silent --head http://localhost:4444); do sleep 1; done
+  - make check-integration
