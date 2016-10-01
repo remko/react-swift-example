@@ -1,5 +1,6 @@
 import Vapor
 import Jay
+import HTTP
 #if os(Linux)
 import CDuktape
 #else
@@ -24,7 +25,7 @@ func toJSON(value: Any) -> String {
 	return String(bytes: data, encoding: String.Encoding.utf8)!
 }
 
-func render(state: [String: Any]) -> [AnyHashable : Any]? {
+func render(state: [String: Any]) -> (html: String, state: String)? {
 	let stateJSON = toJSON(value: state)
 	let ctx = duk_create_heap(nil, nil, nil, nil, nil)
 	defer { duk_destroy_heap(ctx) }
@@ -45,8 +46,11 @@ func render(state: [String: Any]) -> [AnyHashable : Any]? {
 		duk_json_encode(ctx, -1)
 		let resultJSON = String(validatingUTF8: duk_to_string(ctx, -1))!
 		duk_pop(ctx)
-		if let result = try? Jay().anyJsonFromData(Array(resultJSON.utf8)) {
-			return result as! [String: Any]
+		if let result = try? Jay().anyJsonFromData(Array(resultJSON.utf8)) as! [String: Any] {
+			return (
+				html: result["html"]! as! String, 
+				state: result["state"]! as! String
+			)
 		}
 	}
 	return nil
@@ -82,9 +86,15 @@ func loadJS() -> JSValue? {
 }
 
 /* Helper to call the JavaScript render() function */
-func render(state: [String: Any]) -> [AnyHashable : Any]? {
-	return loadJS()?.forProperty("render")?
-		.call(withArguments: [state]).toDictionary()
+func render(state: [String: Any]) -> (html: String, state: String)? {
+	if let result = loadJS()?.forProperty("render")?
+			.call(withArguments: [state]).toDictionary() {
+		return (
+			html: result["html"]! as! String, 
+			state: result["state"]! as! String
+		)
+	}
+	return nil
 }
 
 #endif
@@ -116,12 +126,10 @@ drop.get("/") { req in
 		// Prerender state from the DB
 		let state = getStateFromDB()
 		if let result = render(state: state) {
-			if let html = result["html"] as? String, let state = result["state"] as? String {
-				return try drop.view.make("index", [
-					"html": Node.string(html),
-					"state": Node.string(state)
-				])
-			}
+			return try drop.view.make("index", [
+				"html": Node.string(result.html),
+				"state": Node.string(result.state)
+			])
 		}
 		else {
 			let json = toJSON(value: state).replacingOccurrences(of: "'", with: "'\\''")
@@ -133,7 +141,10 @@ drop.get("/") { req in
 }
 
 drop.get("/api/state") { req in
-	return toJSON(value: getStateFromDB())
+	return Response(
+		headers: ["Content-Type": "application/json"],
+		body: toJSON(value: getStateFromDB())
+	)
 }
 
 drop.run()
