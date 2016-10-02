@@ -2,7 +2,7 @@ import Vapor
 import Jay
 import HTTP
 #if os(Linux)
-import CDuktape
+import Duktape
 #else
 import JavaScriptCore
 #endif
