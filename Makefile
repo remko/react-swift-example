@@ -6,10 +6,10 @@ all: build
 .PHONY: build
 build:
 ifeq ($(OPTIMIZE), 1)
-	NODE_ENV=production $(WEBPACK)
+	NODE_ENV=production $(WEBPACK) --bail
 	swift build -v -c release
 else
-	$(WEBPACK)
+	$(WEBPACK) --bail
 	swift build -v
 endif
 
@@ -27,7 +27,7 @@ run-dev-server:
 
 .PHONY: deps
 deps:
-	npm install
+	yarn
 
 .PHONY: docker
 docker:

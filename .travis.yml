@@ -11,10 +11,11 @@ osx_image: xcode8
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then eval "$(curl -sL https://gist.githubusercontent.com/kylef/5c0475ff02b7c7671d2a/raw/02090c7ede5a637b76e6df1710e83cd0bbe7dcdf/swiftenv-install.sh)" && swiftenv install 3.0; fi
+  - npm install -g yarn
+  - npm install -g webpack-dev-server
 
 install:
   - make deps
-  - npm install -g webpack-dev-server
 
 script:
   - make && make OPTIMIZE=1
